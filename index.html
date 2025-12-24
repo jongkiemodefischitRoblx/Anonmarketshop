@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AnonMarket Shop</title>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial,Helvetica,sans-serif}
+body{
+  background:#7b0000;
+  color:#fff;
+  overflow:hidden;
+}
+
+/* BACKGROUND */
+canvas{
+  position:fixed;
+  inset:0;
+  z-index:-1;
+}
+
+/* HEADER */
+header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:15px;
+}
+.left{
+  display:flex;
+  align-items:center;
+}
+header img{
+  width:40px;
+  height:40px;
+  margin-right:10px;
+}
+header h1{
+  font-size:20px;
+}
+
+/* MENU */
+#menuBtn{
+  font-size:26px;
+  cursor:pointer;
+}
+#menu{
+  display:none;
+  position:fixed;
+  top:60px;
+  right:20px;
+  background:#3b0000;
+  padding:15px;
+  border-radius:10px;
+  width:260px;
+  z-index:10;
+}
+#menu h3{
+  margin-bottom:10px;
+  font-size:16px;
+}
+#menu p{
+  font-size:13px;
+  line-height:1.5;
+  opacity:.9;
+}
+
+/* MAIN */
+.main{
+  min-height:85vh;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  text-align:center;
+  padding:20px;
+}
+
+button{
+  padding:14px 30px;
+  margin:10px;
+  border:none;
+  border-radius:8px;
+  background:#ff1a1a;
+  color:white;
+  font-size:16px;
+  cursor:pointer;
+}
+button:hover{opacity:.85}
+button.maintance{
+  background:#444;
+}
+
+/* PRODUCTS */
+#products{
+  display:none;
+  width:100%;
+  max-width:420px;
+}
+.product{
+  background:rgba(0,0,0,.35);
+  padding:15px;
+  border-radius:10px;
+  margin:15px 0;
+}
+.product h3{font-size:16px;margin-bottom:5px}
+.product p{font-size:14px;margin-bottom:10px}
+
+/* FOOTER */
+footer{
+  text-align:center;
+  font-size:12px;
+  opacity:.8;
+  padding:15px;
+}
+footer a{color:#fff;text-decoration:none}
+</style>
+</head>
+
+<body>
+
+<canvas id="bg"></canvas>
+
+<header>
+  <div class="left">
+    <img src="https://files.catbox.moe/3xstci.png">
+    <h1>AnonMarket Shop</h1>
+  </div>
+  <div id="menuBtn" onclick="toggleMenu()">⋮</div>
+</header>
+
+<div id="menu">
+  <h3>Informasi</h3>
+  <p>
+    • Website resmi AnonMarket<br>
+    • Semua transaksi menggunakan merchant Pakasir<br>
+    • Produk maintenance tidak bisa dibeli<br>
+    • Waspada penipuan & web tiruan<br><br>
+    Jika ada masalah, hubungi CS resmi di bawah.
+  </p>
+</div>
+
+<div class="main">
+  <h2>Halo Selamat Datang Di Website AnonMarket</h2>
+  <p>Silahkan klik tombol di bawah untuk melihat produk</p>
+  <button onclick="openShop()">Shop</button>
+
+  <div id="products">
+
+    <div class="product">
+      <h3>Sewa Bot Jaga Grup WhatsApp 1 Bulan</h3>
+      <p>Price: 6.000</p>
+      <button class="maintance" onclick="maintance()">Beli</button>
+    </div>
+
+    <div class="product">
+      <h3>Panel Ptredoctuly Unlimited</h3>
+      <p>Price: 7.000</p>
+      <button class="maintance" onclick="maintance()">Beli</button>
+    </div>
+
+    <div class="product">
+      <h3>Nokos Brazil</h3>
+      <p>Price: 30.000</p>
+      <button onclick="pay('ISI_SLUG_NOKOS',30000,'NOKOS-BRAZIL')">Beli</button>
+    </div>
+
+  </div>
+</div>
+
+<footer>
+  KAMI DISINI SELALU AMANAH JIKA ADA PENIPUAN ATAU PENIRUAN WEBSITE KAMI SILAHKAN LAPOR KE CS:<br><br>
+  <a href="https://t.me/anondevworm" target="_blank">Telegram</a> |
+  <a href="https://wa.me/60175953518" target="_blank">WhatsApp</a>
+  <br><br>
+  © AlwaysAno 2025 | Privacy & Policy
+</footer>
+
+<script>
+/* MENU */
+function toggleMenu(){
+  const m=document.getElementById("menu");
+  m.style.display=m.style.display==="block"?"none":"block";
+}
+
+/* SHOP */
+function openShop(){
+  document.getElementById("products").style.display="block";
+}
+
+/* MAINTANCE */
+function maintance(){
+  alert("System: Produk Sedang Maintance");
+}
+
+/* PAYMENT */
+function pay(slug,amount,product){
+  if(slug==="ISI_SLUG_NOKOS"){
+    alert("Admin belum mengisi slug Pakasir");
+    return;
+  }
+  const order_id=product+"-"+Date.now();
+  const url=`https://app.pakasir.com/pay/${slug}/${amount}?order_id=${order_id}`;
+  window.open(url,"_blank");
+}
+
+/* BACKGROUND ANIMATION */
+const canvas=document.getElementById("bg");
+const ctx=canvas.getContext("2d");
+let w,h;
+function resize(){
+  w=canvas.width=window.innerWidth;
+  h=canvas.height=window.innerHeight;
+}
+window.addEventListener("resize",resize);
+resize();
+
+let boxes=[];
+for(let i=0;i<45;i++){
+  boxes.push({
+    x:Math.random()*w,
+    y:Math.random()*h,
+    s:Math.random()*18+8,
+    dx:(Math.random()-.5)*0.6,
+    dy:(Math.random()-.5)*0.6
+  });
+}
+
+let mx=w/2,my=h/2;
+window.addEventListener("mousemove",e=>{mx=e.clientX;my=e.clientY});
+window.addEventListener("touchmove",e=>{
+  mx=e.touches[0].clientX;
+  my=e.touches[0].clientY;
+});
+
+function draw(){
+  ctx.clearRect(0,0,w,h);
+  boxes.forEach(b=>{
+    b.x+=b.dx+(mx-w/2)*0.00001;
+    b.y+=b.dy+(my-h/2)*0.00001;
+    if(b.x<0||b.x>w) b.dx*=-1;
+    if(b.y<0||b.y>h) b.dy*=-1;
+    ctx.fillStyle="rgba(255,0,0,.45)";
+    ctx.fillRect(b.x,b.y,b.s,b.s);
+  });
+  requestAnimationFrame(draw);
+}
+draw();
+</script>
+
+</body>
+  </html>
