@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pembayaran Berhasil - AnonMarket</title>
+<style>
+body{
+  margin:0;
+  font-family:Arial,Helvetica,sans-serif;
+  background:#8b0000;
+  color:white;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+  text-align:center;
+  padding:20px;
+}
+img{width:90px;margin-bottom:20px}
+h2{margin-bottom:10px}
+p{margin-bottom:20px;opacity:0.9}
+button{
+  padding:12px 20px;
+  border:none;
+  border-radius:10px;
+  background:#ff2222;
+  color:white;
+  font-size:16px;
+  cursor:pointer;
+}
+.card{
+  background:#b00000;
+  padding:20px;
+  border-radius:15px;
+  max-width:400px;
+  width:100%;
+}
+</style>
+</head>
+<body>
+
+<div class="card">
+  <img src="https://files.catbox.moe/3xstci.png">
+  <h2>✅ Pembayaran Berhasil</h2>
+  <p>Terima kasih 🙏<br>Sistem sedang memproses akun Anda.</p>
+  <div id="info-akun"></div>
+  <button onclick="window.location.href='index.html'">Kembali ke Shop</button>
+</div>
+
+<script>
+// tampilkan info panel dari localStorage jika ada
+const panel = JSON.parse(localStorage.getItem("panel_order"));
+if(panel){
+  const div = document.getElementById("info-akun");
+  div.innerHTML = `
+    <p>
+      <b>Username:</b> ${panel.username}<br>
+      <b>RAM:</b> ${panel.ram}
+    </p>
+  `;
+  // hapus setelah tampil
+  localStorage.removeItem("panel_order");
+}
+</script>
+
+</body>
+</html>
