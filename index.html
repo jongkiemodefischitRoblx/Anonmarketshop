@@ -41,18 +41,7 @@ small{opacity:.8;}
   <div class="card">
     <h3>Panel Ptredoctly</h3>
     <input id="username" placeholder="Masukan Username Panel">
-    <select id="ram">
-      <option value="1">1GB - 1.000</option>
-      <option value="2">2GB - 2.000</option>
-      <option value="3">3GB - 3.000</option>
-      <option value="4">4GB - 4.000</option>
-      <option value="5">5GB - 5.000</option>
-      <option value="6">6GB - 6.000</option>
-      <option value="7">7GB - 7.000</option>
-      <option value="8">8GB - 8.000</option>
-      <option value="9">9GB - 9.000</option>
-      <option value="unlimited">UNLIMITED - PROMO</option>
-    </select>
+    <select id="ram"></select>
     <button onclick="beliPanel()">Beli</button>
     <small>Akun dibuat otomatis setelah pembayaran</small>
   </div>
@@ -78,50 +67,6 @@ small{opacity:.8;}
 </div>
 
 <script>
-// generate order id unik
-function oid(prefix){ return prefix+"-"+Date.now(); }
-
-// BELI PANEL
-function beliPanel(){
-  const u=document.getElementById("username").value;
-  const r=document.getElementById("ram").value;
-  if(!u) return alert("Username wajib diisi");
-
-  localStorage.setItem("panel_order",JSON.stringify({username:u,ram:r}));
-  let price = r==="unlimited"?5000:Number(r)*1000;
-  const order = oid("PANEL");
-  const url=`https://app.pakasir.com/pay/panel-ptredoctly/${price}?order_id=${order}`;
-  window.location.href=url;
-}
-
-// BELI NOKOS
-function beliNokos(){
-  const order = oid("NOKOS-BRAZIL");
-  localStorage.setItem("panel_order",JSON.stringify({username:"N/A",ram:"N/A"}));
-  const url=`https://app.pakasir.com/pay/nokosbrazil/30000?order_id=${order}`;
-  window.location.href=url;
-}
-
-// BACK TO SHOP
-function backShop(){
-  document.getElementById("shop-page").style.display="block";
-  document.getElementById("success-page").style.display="none";
-}
-
-// HANDLE SUCCESS PAGE
-const params=new URLSearchParams(window.location.search);
-if(params.get("status")==="success"){
-  document.getElementById("shop-page").style.display="none";
-  document.getElementById("success-page").style.display="flex";
-  const panel=JSON.parse(localStorage.getItem("panel_order"));
-  if(panel){
-    document.getElementById("info-akun").innerHTML=`
-      <p><b>Username:</b> ${panel.username}<br><b>RAM:</b> ${panel.ram}</p>
-    `;
-    localStorage.removeItem("panel_order");
-  }
-}
-
 // ======= Animasi Kotak Bergerak =======
 const boxCount=15;
 for(let i=0;i<boxCount;i++){
@@ -131,16 +76,11 @@ for(let i=0;i<boxCount;i++){
   box.style.top=Math.random()*window.innerHeight+"px";
   document.body.appendChild(box);
 }
-
 let mouseX=0, mouseY=0;
 document.addEventListener("mousemove",e=>{mouseX=e.clientX; mouseY=e.clientY;});
-document.addEventListener("touchmove",e=>{
-  mouseX=e.touches[0].clientX; mouseY=e.touches[0].clientY;
-});
-
+document.addEventListener("touchmove",e=>{mouseX=e.touches[0].clientX; mouseY=e.touches[0].clientY;});
 function animate(){
-  const boxes=document.querySelectorAll(".box");
-  boxes.forEach(box=>{
+  document.querySelectorAll(".box").forEach(box=>{
     const rect=box.getBoundingClientRect();
     const dx=(mouseX-rect.left)*0.05;
     const dy=(mouseY-rect.top)*0.05;
@@ -149,6 +89,81 @@ function animate(){
   requestAnimationFrame(animate);
 }
 animate();
+
+// ======= 1GB GRATIS LOGIC =======
+const ramSelect = document.getElementById("ram");
+function updateRamOptions() {
+  const soldKey = "ram_1gb_sold";
+  const sold = localStorage.getItem(soldKey);
+
+  ramSelect.innerHTML = `
+    <option value="1">${sold ? "1GB - 1.000" : "1GB - GRATIS (cepat!)"}</option>
+    <option value="2">2GB - 2.000</option>
+    <option value="3">3GB - 3.000</option>
+    <option value="4">4GB - 4.000</option>
+    <option value="5">5GB - 5.000</option>
+    <option value="6">6GB - 6.000</option>
+    <option value="7">7GB - 7.000</option>
+    <option value="8">8GB - 8.000</option>
+    <option value="9">9GB - 9.000</option>
+    <option value="unlimited">UNLIMITED - PROMO</option>
+  `;
+}
+updateRamOptions();
+
+// ======= Beli Panel =======
+function beliPanel(){
+  const u = document.getElementById("username").value;
+  const r = ramSelect.value;
+  if(!u) return alert("Username wajib diisi");
+
+  // cek 1GB GRATIS
+  if(r==="1" && !localStorage.getItem("ram_1gb_sold")){
+    alert("Selamat! Anda mendapatkan 1GB GRATIS 🎉");
+    localStorage.setItem("ram_1gb_sold", "true"); // tandai sudah dibeli
+  }
+
+  // tentukan harga
+  let price;
+  if(r==="1" && localStorage.getItem("ram_1gb_sold")==="true") price = 1000;
+  else if(r==="1") price = 0;
+  else if(r==="unlimited") price = 5000;
+  else price = Number(r)*1000;
+
+  // simpan localStorage untuk success page
+  localStorage.setItem("panel_order", JSON.stringify({username:u, ram:r}));
+
+  // redirect ke Pakasir
+  const order_id = "PANEL-" + Date.now();
+  const url = `https://app.pakasir.com/pay/panel-ptredoctly/${price}?order_id=${order_id}`;
+  window.location.href = url;
+}
+
+// ======= Beli NOKOS =======
+function beliNokos(){
+  const order_id = "NOKOS-BRAZIL-" + Date.now();
+  localStorage.setItem("panel_order", JSON.stringify({username:"N/A", ram:"N/A"}));
+  const url = `https://app.pakasir.com/pay/nokosbrazil/30000?order_id=${order_id}`;
+  window.location.href = url;
+}
+
+// ======= BACK TO SHOP =======
+function backShop(){
+  document.getElementById("shop-page").style.display="block";
+  document.getElementById("success-page").style.display="none";
+}
+
+// ======= HANDLE SUCCESS PAGE =======
+const params = new URLSearchParams(window.location.search);
+if(params.get("status")==="success"){
+  document.getElementById("shop-page").style.display="none";
+  document.getElementById("success-page").style.display="flex";
+  const panel = JSON.parse(localStorage.getItem("panel_order"));
+  if(panel){
+    document.getElementById("info-akun").innerHTML = `<p><b>Username:</b> ${panel.username}<br><b>RAM:</b> ${panel.ram}</p>`;
+    localStorage.removeItem("panel_order");
+  }
+}
 </script>
 
 </body>
