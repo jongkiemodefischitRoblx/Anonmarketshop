@@ -5,62 +5,39 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AnonMarket Shop</title>
 <style>
-body{
-  margin:0;
-  font-family:Arial,Helvetica,sans-serif;
-  background:#900;
-  color:#fff;
-}
-header{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding:15px;
-}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#8b0000;color:#fff;overflow:hidden;position:relative;}
+header{display:flex;justify-content:space-between;align-items:center;padding:15px;position:relative;z-index:10;}
 header img{height:40px}
-.container{padding:20px}
-.card{
-  background:#b00;
-  padding:15px;
-  border-radius:10px;
-  margin-bottom:15px;
-}
-button{
-  padding:10px 15px;
-  background:#ff2222;
-  color:#fff;
-  border:none;
-  border-radius:8px;
-  font-size:16px;
-}
-button:disabled{
-  background:#555;
-}
-input,select{
-  width:100%;
-  padding:10px;
-  margin:8px 0;
-  border-radius:6px;
-  border:none;
-}
+.container{padding:20px;position:relative;z-index:10;}
+.card{background:#b00000;padding:15px;border-radius:12px;margin-bottom:15px;box-shadow:0 4px 8px rgba(0,0,0,0.3);position:relative;z-index:10;}
+button{padding:12px;width:100%;background:#ff2222;color:#fff;border:none;border-radius:10px;font-size:16px;cursor:pointer;transition:0.2s;}
+button:disabled{background:#555;}
+button:hover:not(:disabled){background:#ff4444;}
+input,select{width:100%;padding:10px;margin:8px 0;border-radius:6px;border:none;}
+small{opacity:.8;}
+#success-page{display:none;flex-direction:column;justify-content:center;align-items:center;height:100vh;text-align:center;padding:20px;position:relative;z-index:10;}
+#success-page img{width:90px;margin-bottom:20px;}
+#success-page .card{background:#b00000;padding:20px;border-radius:15px;max-width:400px;width:100%;position:relative;z-index:10;}
+.box{position:absolute;width:40px;height:40px;background:rgba(255,0,0,0.2);border-radius:8px;pointer-events:none;transition:transform 0.1s linear;z-index:1;}
 </style>
 </head>
-
 <body>
 
 <header>
   <img src="https://files.catbox.moe/3xstci.png">
-  <h3>AnonMarket Shop</h3>
+  <b>AnonMarket Shop</b>
 </header>
 
-<div class="container">
+<div class="container" id="shop-page">
 
+  <!-- SEWA BOT -->
   <div class="card">
-    <h3>Sewa Bot Jaga Grup WhatsApp 1 Bulan</h3>
-    <p>Price: 6.000</p>
+    <h3>Sewa Bot Jaga Grup WhatsApp (1 Bulan)</h3>
+    <p>Price: <b>6.000</b></p>
     <button disabled onclick="alert('System: Produk Sedang Maintenance')">Maintenance</button>
   </div>
 
+  <!-- PANEL -->
   <div class="card">
     <h3>Panel Ptredoctly</h3>
     <input id="username" placeholder="Masukan Username Panel">
@@ -77,28 +54,101 @@ input,select{
       <option value="unlimited">UNLIMITED - PROMO</option>
     </select>
     <button onclick="beliPanel()">Beli</button>
+    <small>Akun dibuat otomatis setelah pembayaran</small>
   </div>
 
+  <!-- NOKOS -->
   <div class="card">
     <h3>NOKOSBRAZIL</h3>
-    <p>Price: 30.000</p>
-    <button onclick="window.location.href='https://pay.pakasir.com/nokosbrazil'">Beli</button>
+    <p>Price: <b>30.000</b></p>
+    <button onclick="beliNokos()">Beli</button>
   </div>
 
 </div>
 
+<!-- SUCCESS PAGE -->
+<div id="success-page">
+  <div class="card">
+    <img src="https://files.catbox.moe/3xstci.png">
+    <h2>✅ Pembayaran Berhasil</h2>
+    <p>Terima kasih 🙏<br>Sistem sedang memproses akun Anda.</p>
+    <div id="info-akun"></div>
+    <button onclick="backShop()">Kembali ke Shop</button>
+  </div>
+</div>
+
 <script>
+// generate order id unik
+function oid(prefix){ return prefix+"-"+Date.now(); }
+
+// BELI PANEL
 function beliPanel(){
-  const username=document.getElementById('username').value;
-  const ram=document.getElementById('ram').value;
-  if(!username) return alert("Username wajib diisi");
+  const u=document.getElementById("username").value;
+  const r=document.getElementById("ram").value;
+  if(!u) return alert("Username wajib diisi");
 
-  // simpan order sementara
-  localStorage.setItem("panel_order",JSON.stringify({username,ram}));
-
-  // redirect ke pakasir
-  window.location.href="https://pay.pakasir.com/panel-ptredoctly";
+  localStorage.setItem("panel_order",JSON.stringify({username:u,ram:r}));
+  let price = r==="unlimited"?5000:Number(r)*1000;
+  const order = oid("PANEL");
+  const url=`https://app.pakasir.com/pay/panel-ptredoctly/${price}?order_id=${order}`;
+  window.location.href=url;
 }
+
+// BELI NOKOS
+function beliNokos(){
+  const order = oid("NOKOS-BRAZIL");
+  localStorage.setItem("panel_order",JSON.stringify({username:"N/A",ram:"N/A"}));
+  const url=`https://app.pakasir.com/pay/nokosbrazil/30000?order_id=${order}`;
+  window.location.href=url;
+}
+
+// BACK TO SHOP
+function backShop(){
+  document.getElementById("shop-page").style.display="block";
+  document.getElementById("success-page").style.display="none";
+}
+
+// HANDLE SUCCESS PAGE
+const params=new URLSearchParams(window.location.search);
+if(params.get("status")==="success"){
+  document.getElementById("shop-page").style.display="none";
+  document.getElementById("success-page").style.display="flex";
+  const panel=JSON.parse(localStorage.getItem("panel_order"));
+  if(panel){
+    document.getElementById("info-akun").innerHTML=`
+      <p><b>Username:</b> ${panel.username}<br><b>RAM:</b> ${panel.ram}</p>
+    `;
+    localStorage.removeItem("panel_order");
+  }
+}
+
+// ======= Animasi Kotak Bergerak =======
+const boxCount=15;
+for(let i=0;i<boxCount;i++){
+  const box=document.createElement("div");
+  box.className="box";
+  box.style.left=Math.random()*window.innerWidth+"px";
+  box.style.top=Math.random()*window.innerHeight+"px";
+  document.body.appendChild(box);
+}
+
+let mouseX=0, mouseY=0;
+document.addEventListener("mousemove",e=>{mouseX=e.clientX; mouseY=e.clientY;});
+document.addEventListener("touchmove",e=>{
+  mouseX=e.touches[0].clientX; mouseY=e.touches[0].clientY;
+});
+
+function animate(){
+  const boxes=document.querySelectorAll(".box");
+  boxes.forEach(box=>{
+    const rect=box.getBoundingClientRect();
+    const dx=(mouseX-rect.left)*0.05;
+    const dy=(mouseY-rect.top)*0.05;
+    box.style.transform=`translate(${dx}px,${dy}px)`;
+  });
+  requestAnimationFrame(animate);
+}
+animate();
 </script>
 
 </body>
