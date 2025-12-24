@@ -1,105 +1,159 @@
-const express = require('express');
-const bodyParser = require('body-parser');
-const sqlite3 = require('sqlite3').verbose();
-const crypto = require('crypto');
-const fetch = require('node-fetch');
+import sqlite3 from "sqlite3";
+import crypto from "crypto";
+import fetch from "node-fetch";
 
-const app = express();
+const db = new sqlite3.Database("/tmp/database.db");
 
-// Middleware
-app.use(bodyParser.json());
-app.use(express.static('.')); // Serve index.html & assets
-
-// Database SQLite (Vercel: file akan dibuat di /tmp jika serverless)
-const db = new sqlite3.Database('./database.db', err => {
-  if(err) console.error(err);
-});
-
-// Create tables
-db.serialize(() => {
-  db.run(`CREATE TABLE IF NOT EXISTS accounts (
+// ================= DB =================
+db.serialize(()=>{
+  db.run(`CREATE TABLE IF NOT EXISTS orders(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    order_id TEXT UNIQUE,
     username TEXT,
-    password TEXT,
     ram TEXT,
-    price INTEGER,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    amount INTEGER,
+    ip TEXT,
+    status TEXT,
+    created_at INTEGER
   )`);
-  db.run(`CREATE TABLE IF NOT EXISTS promo (
+  db.run(`CREATE TABLE IF NOT EXISTS promo(
     id INTEGER PRIMARY KEY,
     start_ts INTEGER
   )`);
+  db.run(`CREATE TABLE IF NOT EXISTS ratelimit(
+    ip TEXT,
+    ts INTEGER
+  )`);
 });
 
-// Helper generate password random
-function randomPassword(len=8){
-  return crypto.randomBytes(len).toString('hex').slice(0,len);
+db.get("SELECT * FROM promo WHERE id=1",(e,r)=>{
+  if(!r) db.run("INSERT INTO promo VALUES(1,?)",[Date.now()]);
+});
+
+// ================= CONFIG =================
+const PANEL_URL="https://anonpantatjebol.zonapanel.web.id";
+const PANEL_API_KEY="ptla_vIsOlvAjjFVmhok5VRwl1fZiNvDYpP6cRAIF3kUlvup";
+
+// ================= UTIL =================
+function randPass(len=8){
+  return crypto.randomBytes(len).toString("hex").slice(0,len);
 }
 
-// Get price (handle promo UNLIMITED)
-function getPrice(ram){
-  const now = Date.now();
-  return new Promise((resolve,reject)=>{
-    db.get("SELECT start_ts FROM promo WHERE id=1",(err,row)=>{
-      let promoActive=false;
-      if(row && row.start_ts){
-        if(now-row.start_ts<2*24*3600*1000) promoActive=true;
-      }
-      if(ram==='unlimited'){
-        resolve(promoActive ? 5000 : 12000);
-      }else{
-        resolve(parseInt(ram)*1000);
-      }
+function validRam(ram){
+  return ram==="unlimited" || (Number(ram)>=1 && Number(ram)<=9);
+}
+
+async function priceRam(ram){
+  return new Promise(res=>{
+    db.get("SELECT start_ts FROM promo WHERE id=1",(e,r)=>{
+      const promo = Date.now()-r.start_ts < 2*24*60*60*1000;
+      if(ram==="unlimited") res(promo?5000:12000);
+      else res(Number(ram)*1000);
     });
   });
 }
 
-// Set promo start if not exist
-db.get("SELECT * FROM promo WHERE id=1",(err,row)=>{
-  if(!row) db.run("INSERT INTO promo(id,start_ts) VALUES(1,?)",[Date.now()]);
-});
-
-// Endpoint create account
-app.post('/create-account', async (req,res)=>{
-  try{
-    const {username,ram}=req.body;
-    if(!username || !ram) return res.json({success:false});
-
-    const password=randomPassword(8);
-    const price=await getPrice(ram);
-
-    // --- Panel Ptredoctly API call ---
-    const panelApiKey='ptla_vIsOlvAjjFVmhok5VRwl1fZiNvDYpP6cRAIF3kUlvup';
-    const apiUrl='http://anonpantatjebol.zonapanel.web.id/api/create'; // sesuaikan endpoint panel
-    const bodyData={username,password,ram,apikey:panelApiKey};
-
-    // Uncomment jika pakai API nyata
-    /*
-    const apiRes = await fetch(apiUrl,{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify(bodyData)
+function rateLimit(ip){
+  return new Promise((resolve)=>{
+    const now=Date.now();
+    db.all("SELECT * FROM ratelimit WHERE ip=?",[ip],(e,r)=>{
+      const recent=r.filter(x=>now-x.ts<60000);
+      if(recent.length>=10) return resolve(false);
+      db.run("INSERT INTO ratelimit VALUES(?,?)",[ip,now]);
+      resolve(true);
     });
-    const panelResult = await apiRes.json();
-    if(!panelResult.success) throw new Error("Gagal create akun di panel");
-    */
+  });
+}
 
-    // Simulasi sukses (untuk testing)
-    const panelResult={success:true};
+// ================= PANEL =================
+async function createUser(username,password){
+  const r=await fetch(`${PANEL_URL}/api/application/users`,{
+    method:"POST",
+    headers:{
+      Authorization:`Bearer ${PANEL_API_KEY}`,
+      "Content-Type":"application/json",
+      Accept:"application/json"
+    },
+    body:JSON.stringify({
+      username,
+      email:`${username}@anon.local`,
+      first_name:username,
+      last_name:"Anon",
+      password
+    })
+  });
+  const j=await r.json();
+  return j?.attributes?.id;
+}
 
-    if(!panelResult.success) return res.json({success:false});
+async function createServer(userId,ram){
+  const memory=ram==="unlimited"?0:Number(ram)*1024;
+  await fetch(`${PANEL_URL}/api/application/servers`,{
+    method:"POST",
+    headers:{
+      Authorization:`Bearer ${PANEL_API_KEY}`,
+      "Content-Type":"application/json",
+      Accept:"application/json"
+    },
+    body:JSON.stringify({
+      name:"Panel Ptredoctly",
+      user:userId,
+      egg:1,
+      docker_image:"ghcr.io/pterodactyl/yolks:nodejs_18",
+      startup:"npm start",
+      limits:{memory,swap:0,disk:0,io:500,cpu:0},
+      feature_limits:{databases:1,backups:1,allocations:1},
+      allocation:{default:1}
+    })
+  });
+}
 
-    // Save to SQLite
-    db.run(`INSERT INTO accounts(username,password,ram,price) VALUES(?,?,?,?)`,
-      [username,password,ram,price]);
+// ================= WEBHOOK =================
+export default async function handler(req,res){
+  if(req.method!=="POST") return res.status(200).send("OK");
 
-    res.json({success:true,username,password,ram,price});
-  }catch(e){
-    console.error(e);
-    res.json({success:false});
-  }
-});
+  const ip=req.headers["x-forwarded-for"]||"unknown";
+  if(!await rateLimit(ip))
+    return res.status(429).json({error:"Too many requests"});
 
-// Vercel serverless, listen tidak perlu PORT fixed
-const PORT = process.env.PORT || 3000;
-app.listen(PORT,()=>console.log(`Server running at https://anonmarketshop.vercel.app`));
+  let raw="";
+  for await(const c of req) raw+=c;
+  const data=JSON.parse(raw);
+
+  if(data.status!=="PAID")
+    return res.json({ignored:true});
+
+  const {order_id,amount,custom_field}=data;
+  const {username,ram}=custom_field||{};
+
+  if(!order_id||!username||!validRam(ram))
+    return res.status(400).json({error:"Invalid data"});
+
+  db.get("SELECT * FROM orders WHERE order_id=?",[order_id],async(e,row)=>{
+    if(row) return res.json({ignored:"duplicate order"});
+
+    const realPrice=await priceRam(ram);
+    if(Number(amount)!==realPrice)
+      return res.status(400).json({error:"Invalid amount"});
+
+    const password=randPass();
+    const userId=await createUser(username,password);
+    if(!userId) return res.status(500).json({error:"Panel error"});
+
+    await createServer(userId,ram);
+
+    db.run(
+      "INSERT INTO orders(order_id,username,ram,amount,ip,status,created_at) VALUES(?,?,?,?,?,?,?)",
+      [order_id,username,ram,amount,ip,"PAID",Date.now()]
+    );
+
+    res.json({
+      success:true,
+      panel:{
+        url:PANEL_URL,
+        username,
+        password
+      }
+    });
+  });
+}
