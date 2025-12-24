@@ -117,20 +117,23 @@ function beliPanel(){
   const r = ramSelect.value;
   if(!u) return alert("Username wajib diisi");
 
-  // cek 1GB GRATIS
-  if(r==="1" && !localStorage.getItem("ram_1gb_sold")){
+  let price;
+  const oneGBSoldKey = "ram_1gb_sold";
+
+  // 1GB GRATIS
+  if(r==="1" && !localStorage.getItem(oneGBSoldKey)){
     alert("Selamat! Anda mendapatkan 1GB GRATIS 🎉");
-    localStorage.setItem("ram_1gb_sold", "true"); // tandai sudah dibeli
+    price = 0; // GRATIS
+    localStorage.setItem(oneGBSoldKey, "true"); // tandai sudah dibeli
+  } else if(r==="1") {
+    price = 1000;
+  } else if(r==="unlimited") {
+    price = 5000;
+  } else {
+    price = Number(r)*1000;
   }
 
-  // tentukan harga
-  let price;
-  if(r==="1" && localStorage.getItem("ram_1gb_sold")==="true") price = 1000;
-  else if(r==="1") price = 0;
-  else if(r==="unlimited") price = 5000;
-  else price = Number(r)*1000;
-
-  // simpan localStorage untuk success page
+  // simpan data order untuk success page
   localStorage.setItem("panel_order", JSON.stringify({username:u, ram:r}));
 
   // redirect ke Pakasir
