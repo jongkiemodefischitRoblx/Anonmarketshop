@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin CS Panel</title>
+<style>
+body{font-family:Arial,sans-serif;margin:0;padding:0;background:#f4f4f4;}
+.container{max-width:800px;margin:auto;padding:20px;}
+input,button{padding:10px;margin:5px;}
+table{width:100%;border-collapse:collapse;margin-top:10px;}
+th,td{border:1px solid #ccc;padding:8px;text-align:left;}
+th{background:#b00000;color:#fff;}
+</style>
+</head>
+<body>
+<div class="container">
+<h2>Admin Customer Service Panel</h2>
+
+<div id="loginDiv">
+<input type="password" id="adminPassword" placeholder="Masukkan Password Admin">
+<button onclick="loginAdmin()">Login</button>
+</div>
+
+<div id="panel" style="display:none">
+<h3>Laporan Masalah</h3>
+<table>
+<thead><tr><th>ID</th><th>Nama</th><th>WhatsApp</th><th>Pesan</th><th>File</th><th>Waktu</th></tr></thead>
+<tbody id="reportTable"></tbody>
+</table>
+
+<h3>Stok Produk</h3>
+<table>
+<thead><tr><th>Produk</th><th>Qty</th><th>Last Restock</th></tr></thead>
+<tbody id="stockTable"></tbody>
+</table>
+<button onclick="restock()">Restock Semua (24h)</button>
+</div>
+</div>
+
+<script>
+async function loginAdmin(){
+    const pwd = document.getElementById('adminPassword').value;
+    const res = await fetch('/admin/login',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({password:pwd})
+    });
+    if(res.ok){ 
+        document.getElementById('loginDiv').style.display='none'; 
+        document.getElementById('panel').style.display='block'; 
+        loadReports(); 
+        loadStock(); 
+    }else alert("Password salah");
+}
+
+async function loadReports(){
+    const res = await fetch('/admin/reports');
+    const data = await res.json();
+    const tbody = document.getElementById('reportTable');
+    tbody.innerHTML="";
+    data.forEach(r=>{
+        tbody.innerHTML+=`<tr>
+            <td>${r.id}</td>
+            <td>${r.name}</td>
+            <td>${r.whatsapp}</td>
+            <td>${r.message}</td>
+            <td>${r.file}</td>
+            <td>${r.created_at}</td>
+        </tr>`;
+    });
+}
+
+async function loadStock(){
+    const res = await fetch('/stock');
+    const data = await res.json();
+    const tbody = document.getElementById('stockTable');
+    tbody.innerHTML="";
+    data.forEach(s=>{
+        tbody.innerHTML+=`<tr>
+            <td>${s.product_name}</td>
+            <td>${s.quantity}</td>
+            <td>${s.last_restock}</td>
+        </tr>`;
+    });
+}
+
+async function restock(){
+    const res = await fetch('/stock/restock',{method:'POST'});
+    if(res.ok){ alert("Semua produk berhasil direstock!"); loadStock(); }
+}
+</script>
+
+</body>
+</html>
