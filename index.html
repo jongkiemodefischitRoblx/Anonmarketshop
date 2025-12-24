@@ -137,17 +137,18 @@ footer a{color:#fff;text-decoration:none}
     • Semua transaksi menggunakan merchant Pakasir<br>
     • Produk maintenance tidak bisa dibeli<br>
     • Waspada penipuan & web tiruan<br><br>
-    Jika ada masalah, hubungi CS resmi di bawah.
+    Hubungi CS resmi:<br>
+    <a href="https://t.me/anondevworm" target="_blank">Telegram</a><br>
+    <a href="https://wa.me/60175953518" target="_blank">WhatsApp</a>
   </p>
 </div>
 
 <div class="main">
   <h2>Halo Selamat Datang Di Website AnonMarket</h2>
   <p>Silahkan klik tombol di bawah untuk melihat produk</p>
-  <button onclick="openShop()">Shop</button>
+  <button id="shopBtn" onclick="openShop()">Shop</button>
 
   <div id="products">
-
     <div class="product">
       <h3>Sewa Bot Jaga Grup WhatsApp 1 Bulan</h3>
       <p>Price: 6.000</p>
@@ -166,14 +167,11 @@ footer a{color:#fff;text-decoration:none}
       <button onclick="pay('nokosbrazil',30000,'NOKOS-BRAZIL')">Beli</button>
     </div>
 
+    <button onclick="closeShop()">Tutup</button>
   </div>
 </div>
 
 <footer>
-  KAMI DISINI SELALU AMANAH JIKA ADA PENIPUAN ATAU PENIRUAN WEBSITE KAMI SILAHKAN LAPOR KE CS:<br><br>
-  <a href="https://t.me/anondevworm" target="_blank">Telegram</a> |
-  <a href="https://wa.me/60175953518" target="_blank">WhatsApp</a>
-  <br><br>
   © AlwaysAno 2025 | Privacy & Policy
 </footer>
 
@@ -187,6 +185,12 @@ function toggleMenu(){
 /* SHOP */
 function openShop(){
   document.getElementById("products").style.display="block";
+  document.getElementById("shopBtn").style.display="none";
+}
+
+function closeShop(){
+  document.getElementById("products").style.display="none";
+  document.getElementById("shopBtn").style.display="inline-block";
 }
 
 /* MAINTANCE */
@@ -209,30 +213,18 @@ function pay(slug,amount,product){
 const canvas=document.getElementById("bg");
 const ctx=canvas.getContext("2d");
 let w,h;
-function resize(){
-  w=canvas.width=window.innerWidth;
-  h=canvas.height=window.innerHeight;
-}
+function resize(){ w=canvas.width=window.innerWidth; h=canvas.height=window.innerHeight; }
 window.addEventListener("resize",resize);
 resize();
 
 let boxes=[];
 for(let i=0;i<45;i++){
-  boxes.push({
-    x:Math.random()*w,
-    y:Math.random()*h,
-    s:Math.random()*18+8,
-    dx:(Math.random()-.5)*0.6,
-    dy:(Math.random()-.5)*0.6
-  });
+  boxes.push({x:Math.random()*w,y:Math.random()*h,s:Math.random()*18+8,dx:(Math.random()-.5)*0.6,dy:(Math.random()-.5)*0.6});
 }
 
 let mx=w/2,my=h/2;
 window.addEventListener("mousemove",e=>{mx=e.clientX;my=e.clientY});
-window.addEventListener("touchmove",e=>{
-  mx=e.touches[0].clientX;
-  my=e.touches[0].clientY;
-});
+window.addEventListener("touchmove",e=>{mx=e.touches[0].clientX;my=e.touches[0].clientY});
 
 function draw(){
   ctx.clearRect(0,0,w,h);
@@ -250,4 +242,4 @@ draw();
 </script>
 
 </body>
-  </html>
+</html>
