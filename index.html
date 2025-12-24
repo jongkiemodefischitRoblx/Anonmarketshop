@@ -3,128 +3,103 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NOKOSBRAZIL - Panel</title>
-
+<title>AnonMarket Shop</title>
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:Arial}
 body{
-  background:#0b0000;
+  margin:0;
+  font-family:Arial,Helvetica,sans-serif;
+  background:#900;
   color:#fff;
-  overflow:hidden;
 }
-.bg{
-  position:fixed;
-  inset:0;
-  background:
-    linear-gradient(90deg,rgba(255,0,0,.15) 1px,transparent 1px),
-    linear-gradient(rgba(255,0,0,.15) 1px,transparent 1px);
-  background-size:40px 40px;
-  animation:move 20s linear infinite;
+header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:15px;
 }
-@keyframes move{
-  from{background-position:0 0}
-  to{background-position:400px 400px}
-}
-.container{
-  position:relative;
-  z-index:2;
-  max-width:420px;
-  margin:60px auto;
-  background:#120000;
-  padding:20px;
-  border:1px solid red;
-  border-radius:8px;
-}
-h1{text-align:center;color:red;margin-bottom:15px}
-input,select,button{
-  width:100%;
-  padding:12px;
-  margin-top:10px;
-  background:#000;
-  border:1px solid red;
-  color:#fff;
-  border-radius:5px;
-}
-button{
-  background:red;
-  font-weight:bold;
-  cursor:pointer;
-}
-button:hover{opacity:.85}
-.note{
-  margin-top:10px;
-  font-size:12px;
-  opacity:.7;
-  text-align:center;
-}
-.shop-btn{
+header img{height:40px}
+.container{padding:20px}
+.card{
+  background:#b00;
+  padding:15px;
+  border-radius:10px;
   margin-bottom:15px;
 }
-.maintain{
-  margin-top:15px;
-  text-align:center;
-  font-size:13px;
-  opacity:.6;
+button{
+  padding:10px 15px;
+  background:#ff2222;
+  color:#fff;
+  border:none;
+  border-radius:8px;
+  font-size:16px;
+}
+button:disabled{
+  background:#555;
+}
+input,select{
+  width:100%;
+  padding:10px;
+  margin:8px 0;
+  border-radius:6px;
+  border:none;
 }
 </style>
 </head>
 
 <body>
-<div class="bg"></div>
+
+<header>
+  <img src="https://files.catbox.moe/3xstci.png">
+  <h3>AnonMarket Shop</h3>
+</header>
 
 <div class="container">
-  <h1>NOKOSBRAZIL</h1>
 
-  <button class="shop-btn" onclick="toggleShop()">[ Shop ]</button>
+  <div class="card">
+    <h3>Sewa Bot Jaga Grup WhatsApp 1 Bulan</h3>
+    <p>Price: 6.000</p>
+    <button disabled onclick="alert('System: Produk Sedang Maintenance')">Maintenance</button>
+  </div>
 
-  <div id="shop" style="display:none">
-    <input id="username" placeholder="Username Panel">
-
+  <div class="card">
+    <h3>Panel Ptredoctly</h3>
+    <input id="username" placeholder="Masukan Username Panel">
     <select id="ram">
-      <option value="1">1 GB - Rp 1.000</option>
-      <option value="2">2 GB - Rp 2.000</option>
-      <option value="3">3 GB - Rp 3.000</option>
-      <option value="4">4 GB - Rp 4.000</option>
-      <option value="5">5 GB - Rp 5.000</option>
-      <option value="6">6 GB - Rp 6.000</option>
-      <option value="7">7 GB - Rp 7.000</option>
-      <option value="8">8 GB - Rp 8.000</option>
-      <option value="9">9 GB - Rp 9.000</option>
-      <option value="unlimited">UNLIMITED</option>
+      <option value="1">1GB - 1.000</option>
+      <option value="2">2GB - 2.000</option>
+      <option value="3">3GB - 3.000</option>
+      <option value="4">4GB - 4.000</option>
+      <option value="5">5GB - 5.000</option>
+      <option value="6">6GB - 6.000</option>
+      <option value="7">7GB - 7.000</option>
+      <option value="8">8GB - 8.000</option>
+      <option value="9">9GB - 9.000</option>
+      <option value="unlimited">UNLIMITED - PROMO</option>
     </select>
-
-    <button onclick="beli()">[ Beli ]</button>
-
-    <div class="note">
-      Stok terbatas · 24 jam restock<br>
-      Akun dibuat otomatis setelah pembayaran
-    </div>
+    <button onclick="beliPanel()">Beli</button>
   </div>
 
-  <div class="maintain">
-    Sewa Bot Jaga Grup — <b>MAINTENANCE</b>
+  <div class="card">
+    <h3>NOKOSBRAZIL</h3>
+    <p>Price: 30.000</p>
+    <button onclick="window.location.href='https://pay.pakasir.com/nokosbrazil'">Beli</button>
   </div>
+
 </div>
 
 <script>
-function toggleShop(){
-  const s=document.getElementById('shop');
-  s.style.display=s.style.display==='none'?'block':'none';
-}
-
-function beli(){
-  const username=document.getElementById('username').value.trim();
+function beliPanel(){
+  const username=document.getElementById('username').value;
   const ram=document.getElementById('ram').value;
-  if(!username) return alert('Username wajib diisi');
+  if(!username) return alert("Username wajib diisi");
 
-  // simpan order client-side
-  localStorage.setItem('ORDER_PANEL',JSON.stringify({
-    username,ram,ts:Date.now()
-  }));
+  // simpan order sementara
+  localStorage.setItem("panel_order",JSON.stringify({username,ram}));
 
   // redirect ke pakasir
-  window.location.href='https://pay.pakasir.com/panel-ptredoctly';
+  window.location.href="https://pay.pakasir.com/panel-ptredoctly";
 }
 </script>
+
 </body>
 </html>
